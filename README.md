@@ -188,6 +188,57 @@ Once the application is running in Docker, you can test the API using cURL.
        }
      }'
    ```
+## Adding More AWS Bedrock Models
+
+To extend the API and include more AWS Bedrock models (e.g., Mistral, Titan), follow these steps:
+
+### Steps to Add a New Model
+
+1. **Identify the Model**:
+   - Obtain the `model_id` for the new AWS Bedrock model you wish to integrate.
+   - Refer to the AWS Bedrock documentation to ensure you have the correct model parameters (e.g., `temperature`, `top_k`, etc.).
+
+2. **Update `.env` (if necessary)**:
+   - Ensure that your `.env` file contains valid AWS credentials, as this will be used for invoking the new models.
+   - If there are additional environment variables required for the new models, add them to `.env`.
+
+3. **Modify the Routes**:
+   - In `app/routes.py`, add a new route specific to the model. For example, create a new route for `Mistral`:
+     ```python
+     @router.post("/aws-bedrock/mistral")
+     async def invoke_mistral_model(payload: ModelPayload, Authorize: AuthJWT = Depends()):
+         Authorize.jwt_required()
+         return await invoke_bedrock_model(payload.dict(), model_id="mistral-model-id")
+     ```
+
+4. **Add Custom Handling in `aws_handler.py` (if needed)**:
+   - If the new model requires a different payload structure or special handling, modify the `invoke_bedrock_model` function in `aws_handler.py` to handle this. For example, handle different required parameters or optional ones.
+
+5. **Test the New Route**:
+   - Once you have added the new model route, test it using `cURL` or Postman with the appropriate parameters.
+   - Example cURL request for the new model:
+     ```bash
+     curl -X POST http://127.0.0.1:8000/aws-bedrock/mistral \
+     -H "Authorization: Bearer <your-jwt-token>" \
+     -H "Content-Type: application/json" \
+     -d '{
+         "model_id": "mistral-model-id",
+         "system_prompt": "You are a helpful assistant.",
+         "payload": {
+           "temperature": 0.5,
+           "max_tokens": 2000,
+           "messages": [
+             {"role": "user", "content": "Explain quantum computing."}
+           ]
+         }
+     }'
+     ```
+
+6. **Document the New Model**:
+   - Ensure that you update the `README.md` file with the details of the new model, including its `model_id`, required parameters, and any unique features.
+
+7. **Deploy and Test**:
+   - After updating the code, re-deploy the application (using Docker if necessary), and ensure the new model works as expected.
 
 ## Conclusion
 
